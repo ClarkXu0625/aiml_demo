@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hemoglobin Predictor</title>
+</head>
+<body>
+    <h1>Upload Images and Input Personal Details for Hemoglobin Prediction</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label>Gender:</label>
+        <select name="gender" required>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+        </select><br><br>
+
+        <label>Age:</label>
+        <input type="number" name="age" min="0" required><br><br>
+
+        <label>Tongue Image:</label>
+        <input type="file" name="tongue" required><br>
+        <label>Right Fingernail Image:</label>
+        <input type="file" name="right_fingernail" required><br>
+        <label>Left Fingernail Image:</label>
+        <input type="file" name="left_fingernail" required><br>
+        <label>Left Palm Image:</label>
+        <input type="file" name="left_palm" required><br>
+        <label>Right Palm Image:</label>
+        <input type="file" name="right_palm" required><br>
+        <label>Left Eye Image:</label>
+        <input type="file" name="left_eye" required><br>
+        <label>Right Eye Image:</label>
+        <input type="file" name="right_eye" required><br><br>
+
+        <button type="submit">Predict</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const formData = new FormData(event.target);
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    document.getElementById('result').innerText = `Predicted Hemoglobin Level: ${result.hemoglobin_level}`;
+                } else {
+                    document.getElementById('result').innerText = `Error: ${result.error}`;
+                }
+            } catch (error) {
+                document.getElementById('result').innerText = 'An error occurred. Please try again.';
+            }
+        });
+    </script>
+</body>
+</html>
