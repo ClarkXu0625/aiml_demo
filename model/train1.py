@@ -18,16 +18,16 @@ y = data["Haemoglobin (in mg/dl)"]
 
 # Convert categorical data (like Gender) to numerical, if necessary
 X = pd.get_dummies(X, columns=["Gender"], drop_first=True)
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+#X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
 
 # Train the model
 rf_model = RandomForestRegressor(n_estimators=100, random_state=42)
-rf_model.fit(X_train, y_train)
+rf_model.fit(X, y)
 
 # Make predictions and calculate the mean squared error and r-squared
-y_pred = rf_model.predict(X_test)
-mse = mean_squared_error(y_test, y_pred)
-r2 = r2_score(y_test, y_pred)
+y_pred = rf_model.predict(X)
+mse = mean_squared_error(y, y_pred)
+r2 = r2_score(y, y_pred)
 
 print("Mean Squared Error (MSE):", mse)
 print("R-squared (R²):", r2)
@@ -39,11 +39,11 @@ print("\nModel saved as 'random_forest_regressor.pkl'")
 
 # plot the predicted value against the actual value
 plt.figure(figsize=(8, 6))
-plt.scatter(y_test, y_pred, color='blue', alpha=0.5)
+plt.scatter(y, y_pred, color='blue', alpha=0.5)
 plt.title("Predicted vs Actual Hemoglobin Levels")
 plt.xlabel("Actual Hemoglobin Levels (mg/dl)")
 plt.ylabel("Predicted Hemoglobin Levels (mg/dl)")
-plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], color="red", linestyle="--")  # Ideal line (y=x)
+plt.plot([y.min(), y.max()], [y.min(), y.max()], color="red", linestyle="--")  # Ideal line (y=x)
 plt.grid(True)
 plt.show()
 

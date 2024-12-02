@@ -5,6 +5,7 @@ import numpy as np
 import pickle
 import joblib
 from PIL import Image
+from image_process import image_to_mean_rgb
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads/'
@@ -36,7 +37,9 @@ def upload():
     
     # Process images
     images = []
-    for key in ['tongue', 'right_fingernail', 'left_fingernail', 'left_palm', 'right_palm', 'left_eye', 'right_eye']:
+    file_names = []
+    body_parts = ['tongue', 'right_fingernail', 'left_fingernail', 'left_palm', 'right_palm', 'left_eye', 'right_eye']
+    for key in body_parts:
         file = request.files.get(key)
         if file:
             filename = secure_filename(file.filename)
@@ -47,6 +50,7 @@ def upload():
             image = Image.open(filepath).resize((128, 128))  # Resize for example
             image = np.array(image) / 255.0  # Normalize pixel values
             images.append(image.flatten())  # Flatten for model input
+            file_names.append(filename)
     
     if len(images) < 7:
         return jsonify({"error": "All 7 images are required"}), 400
@@ -56,19 +60,13 @@ def upload():
     input_features = np.append(input_data, [gender_encoded, float(age)])  # Add gender and age
     
     # convert image average rgb values
-    input_features = preprocess(input_features)
+    input_features = image_to_mean_rgb(file_names, body_parts)
     
     # Perform inference
     hemoglobin_level = model.predict(input_features)[0]
     
     return jsonify({"hemoglobin_level": hemoglobin_level})
 
-
-def preprocess(input_features):
-    return input_features
-
-def prediction(model, input):
-    pass
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8000, debug=True)
