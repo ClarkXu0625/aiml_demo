@@ -6,16 +6,11 @@ import pickle
 import joblib
 from PIL import Image
 from image_process import image_to_mean_rgb
+from prediction import predict_hemoglobin_level
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads/'
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-
-# Load your pre-trained model
-MODEL_PATH = 'model/random_forest_iris.pkl'
-#model = pickle.load(open(MODEL_PATH, 'rb'))
-# Load the model
-model = joblib.load(MODEL_PATH)
 
 # Route to render the homepage
 @app.route('/')
@@ -60,10 +55,10 @@ def upload():
     input_features = np.append(input_data, [gender_encoded, float(age)])  # Add gender and age
     
     # convert image average rgb values
-    input_features = image_to_mean_rgb(file_names, body_parts)
+    input_features = image_to_mean_rgb(file_names, body_parts, age, gender)
     
     # Perform inference
-    hemoglobin_level = model.predict(input_features)[0]
+    hemoglobin_level = predict_hemoglobin_level(input_features)
     
     return jsonify({"hemoglobin_level": hemoglobin_level})
 

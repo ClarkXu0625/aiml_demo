@@ -12,7 +12,7 @@ MODEL_PATH = 'model/SegModels'
 IMAGE_PATH = 'uploads'
 target_size = (512, 512) 
 
-def segment_image(original_image_path, mask_image_path):
+def segment_image(original_image, mask_image_path):
     '''
     This function segments the original image using the mask image and saves the segmented image.
 
@@ -22,16 +22,16 @@ def segment_image(original_image_path, mask_image_path):
         output_image_path (str): The path to save the segmented image.
 
     Returns:
-        bool: True if successful, False otherwise.
+        bool: segmented image
     '''
-    original_image = cv2.imread(original_image_path)
+    #original_image = cv2.imread(original_image_path)
     original_image = cv2.resize(original_image, (512, 512))
     mask_image = cv2.imread(mask_image_path, cv2.IMREAD_GRAYSCALE)
     mask_image = cv2.resize(mask_image, (512, 512))
 
-    if original_image is None or mask_image is None:
-        print(f"Error reading image or mask for {original_image_path}")
-        return False
+    # if original_image is None or mask_image is None:
+    #     print(f"Error reading image or mask for {original_image_path}")
+    #     return False
     
     # Make sure the mask is binary
     _, binary_mask = cv2.threshold(mask_image, 0, 255, cv2.THRESH_BINARY)
@@ -92,12 +92,18 @@ def preprocess_image(image_path, target_size):
     image = np.expand_dims(image, axis=0) 
     return image
 
+def read_and_reshape_image(image_path, target_size):
+    image = cv2.imread(image_path)
+    image = cv2.resize(image, target_size)
+    image = np.expand_dims(image, axis=0) 
+    print(image.shape)
+    return image
 
 
 
-def image_to_mean_rgb(file_names, body_parts):
+def image_to_mean_rgb(file_names, body_parts, age, gender):
     '''['tongue', 'right_fingernail', 'left_fingernail', 'left_palm', 'right_palm', 'left_eye', 'right_eye']'''
-    average_rgb_values = []
+    # average_rgb_values = []
     results = {}
     for i in range(7):
         filename = file_names[i]
@@ -106,11 +112,11 @@ def image_to_mean_rgb(file_names, body_parts):
         print(body_part)
         # Load the appropriate model
         if body_part.endswith("eye"):
-            model_name = 'eyelid_model.pkl'
+            model_name = 'eyelid_model.h5'
         elif body_part.endswith("fingernail"):
-            model_name = 'fingernail_model.pkl'
+            model_name = 'fingernail_model.h5'
         elif body_part.endswith("palm"):
-            model_name = 'palm_model.pkl'
+            model_name = 'palm_model.h5'
         else:
             continue
 
@@ -141,20 +147,30 @@ def image_to_mean_rgb(file_names, body_parts):
             mask = largest_region_mask
         else:
             mask = prediction * 255
+
+        cv2.imwrite(os.path.join('mask', filename), mask)
+        print('blur done')
         
 
         # Segment the image
-        segmented_image = segment_image(image_path, mask)
+        original_image = read_and_reshape_image(image_path, target_size)
+        print(original_image.shape)
+        segmented_image = segment_image(original_image, os.path.join('mask', filename))
+        cv2.imwrite(os.path.join('cropped', filename), segmented_image)
+        print('segmentation done')
+
 
         # calculate average rgb
         average_rgb = calculate_average_rgb(segmented_image)
-        average_rgb_values.append(average_rgb)
+        # average_rgb_values.append(average_rgb)
         results[body_part] = average_rgb
+        results['age'] = age
+        results['gender'] = gender
     return results
 
 
-#if "__name__" == "__main__":
-values = image_to_mean_rgb(['tongue.jpg', 'right_nail.jpg', 'left_nail.jpg', 'left_palm.jpg', 'right_palm.jpg', 'left_eye.jpg', 'right_eye.jpg'], 
-                    ['tongue', 'right_fingernail', 'left_fingernail', 'left_palm', 'right_palm', 'left_eye', 'right_eye'])
-print(values)
-print("Done")
+if __name__ == '__main__':
+    values = image_to_mean_rgb(['tongue.jpg', 'right_nail.jpg', 'left_nail.jpg', 'left_palm.jpg', 'right_palm.jpg', 'left_eye.jpg', 'right_eye.jpg'], 
+                        ['tongue', 'right_fingernail', 'left_fingernail', 'left_palm', 'right_palm', 'left_eye', 'right_eye'])
+    print(values)
+    print("Done")
